@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Persistence;
+using Application.Core;
+using Application.Activities.Queries;
+using Application.Activities.Commands;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +15,10 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 });
 
 builder.Services.AddCors();
+builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<GetActivityList.Handler>());
+builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<GetActivityDetails.Handler>());
+builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<DeleteActivity.Handler>());
+builder.Services.AddAutoMapper(_ => { }, typeof(MappingProfiles).Assembly);
 
 var app = builder.Build();
 
