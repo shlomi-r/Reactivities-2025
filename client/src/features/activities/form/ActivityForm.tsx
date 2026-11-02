@@ -1,27 +1,31 @@
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
+import { useActivities } from "../../../lib/hooks/useActivities";
 
 type Props = {
   activity?: Activity;
   closeForm: () => void;
-  submitForm: (activity: Activity) => void;
 };
 
-export default function ActivityForm({
-  activity,
-  closeForm,
-  submitForm,
-}: Props) {
-  const handleSubmit = (event: any) => {
+export default function ActivityForm({ activity, closeForm }: Props) {
+  const { updateActivity, createActivity } = useActivities();
+
+  const handleSubmit = async (event: any) => {
     event.preventDefault();
-    // console.log(event);
+
     const formData = new FormData(event.currentTarget);
     const data: { [key: string]: FormDataEntryValue } = {};
     formData.forEach((value, key) => {
       data[key] = value;
     });
-    // console.log(data);
-    if (activity) data.id = activity.id;
-    submitForm(data as unknown as Activity);
+
+    if (activity) {
+      data.id = activity.id;
+      await updateActivity.mutateAsync(data as unknown as Activity);
+      closeForm();
+    } else {
+      await createActivity.mutateAsync(data as unknown as Activity);
+      closeForm();
+    }
   };
 
   return (
@@ -63,7 +67,11 @@ export default function ActivityForm({
           label="Date"
           variant="outlined"
           type="date"
-          defaultValue={activity?.date}
+          defaultValue={
+            activity?.date
+              ? new Date(activity.date).toISOString().split("T")[0]
+              : new Date().toISOString().split("T")[0]
+          }
         />
         <TextField
           name="city"
@@ -81,7 +89,12 @@ export default function ActivityForm({
           <Button color="inherit" onClick={closeForm}>
             Cancel
           </Button>
-          <Button type="submit" color="success" variant="contained">
+          <Button
+            type="submit"
+            color="success"
+            variant="contained"
+            disabled={updateActivity.isPending || createActivity.isPending}
+          >
             Submit
           </Button>
         </Box>
